@@ -1,7 +1,7 @@
 default persistent._MCloudSync_no = 0
-default persistent._MCloudSync_auto = False
-default persistent._MCloudSync_auto_sync = False
-default persistent._MCloudSync_compat_mode = False
+default persistent._MCloudSync_auto = True
+default persistent._MCloudSync_auto_sync = True
+default persistent._MCloudSync_compat_mode = True
 #为了跑赢renpy对persistent的自动加载以偷梁换柱
 #普通的init -999已经不够快了
 #需要使用python early
@@ -54,7 +54,7 @@ python early in mas_sync:
         #    store.renpy.save_persistent()
 
         upload()
-    
+
     def download_to_new_location():
         import os
         import shutil
@@ -97,72 +97,72 @@ python early in mas_sync:
 #可能会有不稳定
 #严重的副作用：退出时间明显变长
 label _quit:
-        python:
-            import datetime
-            store.mas_calendar.saveCalendarDatabase(CustomEncoder)
-            persistent.sessions['last_session_end']=datetime.datetime.now()
-            today_time = (
-                persistent.sessions["last_session_end"]
-                - persistent.sessions["current_session_start"]
-            )
-            new_time = today_time + persistent.sessions["total_playtime"]
+    python:
+        import datetime
+        store.mas_calendar.saveCalendarDatabase(CustomEncoder)
+        persistent.sessions['last_session_end']=datetime.datetime.now()
+        today_time = (
+            persistent.sessions["last_session_end"]
+            - persistent.sessions["current_session_start"]
+        )
+        new_time = today_time + persistent.sessions["total_playtime"]
 
-            # prevent out of boudns time
-            if datetime.timedelta(0) < new_time <= mas_maxPlaytime():
-                persistent.sessions['total_playtime'] = new_time
+        # prevent out of boudns time
+        if datetime.timedelta(0) < new_time <= mas_maxPlaytime():
+            persistent.sessions['total_playtime'] = new_time
 
-            # set the monika size
-            store.mas_dockstat.setMoniSize(persistent.sessions["total_playtime"])
+        # set the monika size
+        store.mas_dockstat.setMoniSize(persistent.sessions["total_playtime"])
 
-            # save selectables
-            store.mas_selspr.save_selectables()
+        # save selectables
+        store.mas_selspr.save_selectables()
 
-            # save current hair / clothes / acs
-            monika_chr.save()
+        # save current hair / clothes / acs
+        monika_chr.save()
 
-            # save weather options
-            store.mas_weather.saveMWData()
+        # save weather options
+        store.mas_weather.saveMWData()
 
-            # save bgs
-            store.mas_background.saveMBGData()
+        # save bgs
+        store.mas_background.saveMBGData()
 
-            #remove o31 cgs
-            store.mas_o31_event.removeImages()
+        #remove o31 cgs
+        store.mas_o31_event.removeImages()
 
-            # delayed action stuff
-            mas_runDelayedActions(MAS_FC_END)
-            store.mas_delact.saveDelayedActionMap()
+        # delayed action stuff
+        mas_runDelayedActions(MAS_FC_END)
+        store.mas_delact.saveDelayedActionMap()
 
-            _mas_AffSave()
+        _mas_AffSave()
 
-            # delete the monika file if we aren't leaving
-            if not persistent._mas_dockstat_going_to_leave:
-                store.mas_utils.trydel(mas_docking_station._trackPackage("monika"))
+        # delete the monika file if we aren't leaving
+        if not persistent._mas_dockstat_going_to_leave:
+            store.mas_utils.trydel(mas_docking_station._trackPackage("monika"))
 
-            # clear image caches
-            store.mas_sprites._clear_caches()
+        # clear image caches
+        store.mas_sprites._clear_caches()
 
-            # xp calc
-            store.mas_xp.grant()
+        # xp calc
+        store.mas_xp.grant()
 
-            # finish logs
-            store.mas_logging.logging.shutdown()
-            if persistent._MCloudSync_compat_mode :
-                del persistent._voice_mute
-                del persistent._mas_acs_pre_list
-                del persistent._mas_windowreacts_notif_filters
-            store.renpy.save_persistent()
-        if persistent._MCloudSync_auto :
-            $ store.mas_sync.upload_save(isUserBackup=False)
-        $ store.renpy.quit()
+        # finish logs
+        store.mas_logging.logging.shutdown()
+        if persistent._MCloudSync_compat_mode :
+            del persistent._voice_mute
+            del persistent._mas_acs_pre_list
+            del persistent._mas_windowreacts_notif_filters
+        store.renpy.save_persistent()
+    if persistent._MCloudSync_auto :
+        $ store.mas_sync.upload_save(isUserBackup=False)
+    $ store.renpy.quit()
 
 #同步判定
 init python:
     def toggle_auto_sync():
         import os
         basedir = renpy.config.basedir + "/game/Submods/MCloudSync"
-#        if os.name != 'nt':
-#            basedir = '/storage/emulated/0/Android/data/and.sirp.masmobile/files/game/Submods/MCloudSync'
+        if os.name != 'nt':
+            basedir = '/storage/emulated/0/MAS/game/Submods/MCloudSync'
         
         flag_file = os.path.join(basedir, ".mcloud_auto_sync")
         

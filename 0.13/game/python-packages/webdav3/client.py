@@ -329,8 +329,8 @@ class Client(object):
 
         """
         directory_urn = Urn(remote_path, directory=True)
-        if not self.check(directory_urn.parent()):
-            raise RemoteParentNotFound(directory_urn.path())
+        #if not self.check(directory_urn.parent()):
+        #    raise RemoteParentNotFound(directory_urn.path())
 
         try:
             response = self.execute_request(action='mkdir', path=directory_urn.quote())
@@ -532,8 +532,8 @@ class Client(object):
         if urn.is_dir():
             raise OptionNotValid(name="remote_path", value=remote_path)
 
-        if not self.check(urn.parent()):
-            raise RemoteParentNotFound(urn.path())
+        #if not self.check(urn.parent()):
+        #    raise RemoteParentNotFound(urn.path())
 
         if not callable(read_callback):
             raise OptionNotValid(name='read_callback', value=read_callback)
@@ -552,8 +552,8 @@ class Client(object):
         if urn.is_dir():
             raise OptionNotValid(name="remote_path", value=remote_path)
 
-        if not self.check(urn.parent()):
-            raise RemoteParentNotFound(urn.path())
+        #if not self.check(urn.parent()):
+        #    raise RemoteParentNotFound(urn.path())
 
         self.execute_request(action='upload', path=urn.quote(), data=buff)
 
@@ -639,8 +639,8 @@ class Client(object):
         if os.path.isdir(local_path):
             raise OptionNotValid(name="local_path", value=local_path)
 
-        if not self.check(urn.parent()):
-            raise RemoteParentNotFound(urn.path())
+        #if not self.check(urn.parent()):
+        #    raise RemoteParentNotFound(urn.path())
 
         with open(local_path, "rb") as local_file:
             total = os.path.getsize(local_path)
@@ -715,8 +715,8 @@ class Client(object):
             raise RemoteResourceNotFound(urn_from.path())
 
         urn_to = Urn(remote_path_to)
-        if not self.check(urn_to.parent()):
-            raise RemoteParentNotFound(urn_to.path())
+        #if not self.check(urn_to.parent()):
+        #    raise RemoteParentNotFound(urn_to.path())
 
         headers = [
             "Destination: {url}".format(url=self.get_url(urn_to.quote()))
@@ -739,8 +739,8 @@ class Client(object):
             raise RemoteResourceNotFound(urn_from.path())
 
         urn_to = Urn(remote_path_to)
-        if not self.check(urn_to.parent()):
-            raise RemoteParentNotFound(urn_to.path())
+        #if not self.check(urn_to.parent()):
+        #    raise RemoteParentNotFound(urn_to.path())
 
         header_destination = "Destination: {path}".format(path=self.get_url(urn_to.quote()))
         header_overwrite = "Overwrite: {flag}".format(flag="T" if overwrite else "F")
