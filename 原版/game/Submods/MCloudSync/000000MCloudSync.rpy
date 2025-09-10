@@ -1,4 +1,6 @@
 default persistent._MCloudSync_no = 0
+default persistent._MCloudSync_auto = True
+default persistent._MCloudSync_auto_sync = True
 #为了跑赢renpy对persistent的自动加载以偷梁换柱
 #普通的init -999已经不够快了
 #需要使用python early
@@ -11,11 +13,12 @@ python early in mas_sync:
         basedir = '/storage/emulated/0/Android/data/and.kne.masmobile/files'
 
     os.environ['REQUESTS_CA_BUNDLE'] = basedir + "/game/python-packages/certifi/cacert.pem"
+    auto_sync_enabled = os.path.exists(basedir + "/game/Submods/MCloudSync/.mcloud_auto_sync")
 
     #################################
     # 在以下区域，将邮箱和密码修改为你自己的
     mas_sync_client = {
-        'webdav_hostname': "https://diskdav.monika.love:28991/dav",
+        'webdav_hostname': "https://diskdav.monika.love:29991/dav",
         'webdav_login':    "邮箱（即使用webdav服务的用户名，莫盘使用论坛账号邮箱作为用户名）",
         'webdav_root':  "/",
         'webdav_password': "密码"
@@ -42,27 +45,49 @@ python early in mas_sync:
         if mas_sync.check("MAS_Sync/persistent"):
             mas_sync.clean("MAS_Sync/persistent")
         upload()
+    
+    def download_to_new_location():
+        import os
+        import shutil
+
+        # 1. 本地目标目录
+        if os.name == 'nt':
+            mas_dir = renpy.config.basedir + "/saves/MAS_Sync/"
+        else:
+            mas_dir = '/storage/emulated/0/MAS/saves/MAS_Sync/'
+        mas_file = os.path.join(mas_dir, "persistent")
+
+        # 2. 目录不存在就创建
+        if not os.path.exists(mas_dir):
+            os.makedirs(mas_dir)
+
+        # 3. 本地已有备份就删除
+        if os.path.exists(mas_file):
+            os.remove(mas_file)
+
+        # 4. 从云端下载
+        mas_sync.download(remote_path="MAS_Sync/persistent", local_path=mas_file)
 
     import store
     import shutil
-    if os.path.exists(dataDir + "/persistent_beforesync"):
-        os.remove(dataDir + "/persistent_beforesync")
-    if os.path.exists(dataDir + "/persistent"):
-        shutil.copy(dataDir + "/persistent",dataDir + "/persistent_beforesync")
-        os.remove(dataDir + "/persistent")
-    try:
-        mas_sync.download(remote_path="MAS_Sync/persistent", local_path=dataDir + "/persistent")
-    except:
-        shutil.copy(dataDir + "/persistent_beforesync",dataDir + "/persistent")
-    else:
-        
-        pass
+    if auto_sync_enabled :
+        if os.path.exists(dataDir + "/persistent_beforesync"):
+            os.remove(dataDir + "/persistent_beforesync")
+        if os.path.exists(dataDir + "/persistent"):
+            shutil.copy(dataDir + "/persistent",dataDir + "/persistent_beforesync")
+            os.remove(dataDir + "/persistent")
+        try:
+            mas_sync.download(remote_path="MAS_Sync/persistent", local_path=dataDir + "/persistent")
+        except:
+            shutil.copy(dataDir + "/persistent_beforesync",dataDir + "/persistent")
+        else:
+            
+            pass
         
 #接管游戏退出过程
 #可能会有不稳定
 #严重的副作用：退出时间明显变长
 label _quit:
-
     python:
         import datetime
         store.mas_calendar.saveCalendarDatabase(CustomEncoder)
@@ -114,9 +139,29 @@ label _quit:
         # finish logs
         store.mas_logging.logging.shutdown()
         store.renpy.save_persistent()
-$    store.mas_sync.upload_save(isUserBackup=False)
-$    store.renpy.quit()
+    if persistent._MCloudSync_auto :
+        $ store.mas_sync.upload_save(isUserBackup=False)
+    $ store.renpy.quit()
 
+#同步判定
+init python:
+    def toggle_auto_sync():
+        import os
+        basedir = renpy.config.basedir + "/game/Submods/MCloudSync"
+        if os.name != 'nt':
+            basedir = '/storage/emulated/0/Android/data/and.kne.masmobile/files/game/Submods/MCloudSync'
+        
+        flag_file = os.path.join(basedir, ".mcloud_auto_sync")
+        
+        if os.path.exists(flag_file):
+            os.remove(flag_file)
+            persistent._MCloudSync_auto = False
+            persistent._MCloudSync_auto_sync = False
+        else:
+            with open(flag_file, 'w') as f:
+                f.write("auto sync enabled")
+            persistent._MCloudSync_auto = True
+            persistent._MCloudSync_auto_sync = True
 
 init -990 python:
     store.mas_submod_utils.Submod(
@@ -125,7 +170,7 @@ init -990 python:
         description=(
             "使得存档自由穿梭在不同设备间"
         ),
-        version="1.0.0",
+        version="1.0.1",
         settings_pane="mc_info",
     )
 init -989 python:
@@ -148,3 +193,11 @@ screen mc_info():
                 style "main_menu_version"
     textbutton "> 立刻上传":
         action Function(store.mas_sync.upload)
+    textbutton "> 下载存档":
+        action Function(store.mas_sync.download_to_new_location)
+    textbutton "> 仅上传: [('启用' if persistent._MCloudSync_auto else '关闭')]":
+        action ToggleField(persistent, "_MCloudSync_auto")
+        sensitive not persistent._MCloudSync_auto_sync  # 同步开启时禁用上传开关
+    textbutton "> 云端同步: [('启用' if persistent._MCloudSync_auto_sync else '关闭')]":
+        action Function(toggle_auto_sync)
+
