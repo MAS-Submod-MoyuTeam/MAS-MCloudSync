@@ -5,7 +5,7 @@ https://forum.monika.love/d/3495
 
 #2025-9-21
 
-PC需要安装补丁
+PC需要安装补丁revertable.py
 复制该文件至游戏根目录/renpy
 
 新增功能下载存档、仅上传、云端同步
