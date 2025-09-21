@@ -170,7 +170,7 @@ init -990 python:
         description=(
             "使得存档自由穿梭在不同设备间"
         ),
-        version="1.0.1",
+        version="1.0.2",
         settings_pane="mc_info",
     )
 init -989 python:
