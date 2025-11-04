@@ -13,6 +13,8 @@ python early in mas_sync:
         basedir = '/storage/emulated/0/Android/data/and.kne.masmobile/files'
 
     os.environ['REQUESTS_CA_BUNDLE'] = basedir + "/game/python-packages/certifi/cacert.pem"
+    if os.path.exists(basedir + "/game/Submods/MCloudSync/.mcloud_auto_sync") and not persistent._MCloudSync_auto_sync:
+        os.remove(basedir + "/game/Submods/MCloudSync/.mcloud_auto_sync")
     auto_sync_enabled = os.path.exists(basedir + "/game/Submods/MCloudSync/.mcloud_auto_sync")
 
     #################################
@@ -170,7 +172,7 @@ init -990 python:
         description=(
             "使得存档自由穿梭在不同设备间"
         ),
-        version="1.0.2",
+        version="1.0.3",
         settings_pane="mc_info",
     )
 init -989 python:
