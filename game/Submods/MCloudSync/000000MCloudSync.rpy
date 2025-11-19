@@ -8,6 +8,8 @@ default persistent._MCloudSync_auto_sync = True
 #mas中负责兼容性测试的代码是zz_backup.rpy 跑赢它可以确保让它帮我们处理兼容性问题
 init python:
     basedir = renpy.config.basedir
+    if os.name != 'nt':
+        basedir = '/storage/emulated/0/Android/data/and.kne.masmobile/files'
     if os.path.exists(basedir + "/game/Submods/MCloudSync/.mcloud_auto_sync") and not persistent._MCloudSync_auto_sync:
         os.remove(basedir + "/game/Submods/MCloudSync/.mcloud_auto_sync")
 python early in mas_sync:
@@ -174,7 +176,7 @@ init -990 python:
         description=(
             "使得存档自由穿梭在不同设备间"
         ),
-        version="1.0.4",
+        version="1.0.5",
         settings_pane="mc_info",
     )
 init -989 python:
